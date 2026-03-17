@@ -2,7 +2,10 @@
 
 ## Overview
 
-This prototype implements an **AI Advisor Copilot** with three agents (Access → Connection → Summary) and a Streamlit frontend, so advisors can get meeting prep from client data in one click.
+This prototype implements an **AI Advisor Copilot** with three agents (Access → Connection → Summary) and two UI options:
+
+- **React + TypeScript frontend + FastAPI backend (recommended):** production-style look/feel, one deployable service (API + static UI).
+- **Streamlit app (legacy):** quick demo UI, still available.
 
 ---
 
@@ -52,18 +55,24 @@ You can edit these CSVs or add new rows to demo different scenarios.
 
 ---
 
-## Step 3: Run the copilot (Streamlit UI)
+## Step 3: Run the copilot (recommended UI: React + TypeScript + FastAPI)
 
-From the project root:
+### 3A) Local development (two terminals)
 
 ```bash
-streamlit run app/streamlit_app.py
+# Terminal 1 (API)
+uvicorn api.main:app --reload --port 8001
+
+# Terminal 2 (frontend)
+cd frontend
+npm install
+npm run dev
 ```
 
 Then:
 
-1. Open the URL shown in the terminal (e.g. `http://localhost:8501`).
-2. In the sidebar, **select a client** (or enter Client ID, e.g. `C001`).
+1. Open `http://localhost:5173`.
+2. In the sidebar, **select a client** (e.g. `C001`, `C002`, `C003`).
 3. Optionally add **additional notes** for this meeting.
 4. Choose **Model** (e.g. `gpt-4o-mini` for speed, `gpt-4o` for higher quality).
 5. Click **Generate meeting prep**.
@@ -75,6 +84,16 @@ The app runs:
 - **Summary Agent** → produces the meeting prep.
 
 Output appears in tabs: **Meeting prep** (summary, signals, risks/opportunities, discussion topics, next-best actions, human-review notes), **Relationships**, and **Raw context**.
+
+### 3B) Streamlit UI (legacy)
+
+From the project root:
+
+```bash
+streamlit run app/streamlit_app.py
+```
+
+Open the URL shown in the terminal (typically `http://localhost:8501`), then select a client and click **Generate meeting prep**.
 
 ---
 
@@ -116,6 +135,8 @@ AIadvisor/
 ├── requirements.txt
 ├── STEP_BY_STEP.md        # This guide
 ├── STAKEHOLDER_SLIDE.html # One-slide business pitch
+├── api/                   # FastAPI backend (/api/clients, /api/prep)
+├── frontend/              # React + TypeScript + Tailwind UI
 ├── data/                  # Mock CSV data
 │   ├── clients.csv
 │   ├── crm_notes.csv

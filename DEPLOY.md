@@ -38,6 +38,18 @@ Your app will be available at a URL like:
 
 The repo includes a **Dockerfile**. Use it on any platform that builds and runs containers.
 
+### What the container runs
+
+- **FastAPI** serves:
+  - **UI** at `/` (built React + TypeScript app)
+  - **API** at `/api/*` (`/api/clients`, `/api/prep`)
+- The server binds to `PORT` (provided by most platforms). Locally it defaults to `8501`.
+
+### Required environment variables
+
+- **`OPENAI_API_KEY`**: required (set this in your platform’s Variables/Secrets)
+- **`OPENAI_BASE_URL`**: optional (only if you use a custom OpenAI-compatible endpoint)
+
 ### Build and run locally
 
 The Docker image builds the **React + TypeScript frontend** and runs the **FastAPI** server (API + static UI).
@@ -49,8 +61,8 @@ docker run -p 8501:8501 -e OPENAI_API_KEY=sk-your-key advisor-copilot
 
 Open http://localhost:8501 (modern JS/TS UI). For **local development** without Docker:
 
-- **Terminal 1 – API:** `uvicorn api.main:app --reload --port 8000`
-- **Terminal 2 – Frontend:** `cd frontend && npm install && npm run dev` → http://localhost:5173 (proxies /api to 8000)
+- **Terminal 1 – API:** `uvicorn api.main:app --reload --port 8001`
+- **Terminal 2 – Frontend:** `cd frontend && npm install && npm run dev` → http://localhost:5173 (proxies /api to 8001)
 
 ### Railway (Docker)
 
@@ -78,9 +90,24 @@ Open http://localhost:8501 (modern JS/TS UI). For **local development** without 
 
 The app listens on the port Railway provides via `PORT`; the Dockerfile is already set up to use it.
 
+### Render (Docker)
+
+1. At [render.com](https://render.com), **New** → **Web Service**, connect the repo.
+2. **Environment**: Docker.
+3. **Environment variables**: add `OPENAI_API_KEY` (and optionally `OPENAI_BASE_URL`).
+4. Deploy; use the generated URL.
+
+### Fly.io (Docker)
+
+```bash
+fly launch   # follow prompts, uses Dockerfile
+fly secrets set OPENAI_API_KEY=sk-your-key
+fly deploy
+```
+
 ## Checklist
 
-- [ ] Repo on GitHub (with `app/`, `agents/`, `data/`, `requirements.txt`)
+- [ ] Repo on GitHub (with `api/`, `frontend/`, `agents/`, `data/`, `requirements.txt`, `Dockerfile`)
 - [ ] `OPENAI_API_KEY` set in the cloud (Secrets / Environment variables)
 - [ ] No `.env` or secrets committed (they are in `.gitignore`)
 
