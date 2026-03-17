@@ -1,0 +1,9 @@
+client_id,goal_name,time_horizon,target_amount,priority,status
+C001,Retirement nest egg,15 years,$3.5M,High,On track
+C001,Education fund (child),8 years,$120K,Medium,On track
+C001,ESG alignment,Ongoing,N/A,Medium,In progress - exploring options
+C002,Retirement income stability,5 years,N/A,High,Active
+C002,Inflation protection,Ongoing,N/A,High,Monitoring
+C003,Wealth transfer to heirs,10+ years,N/A,High,Planning phase
+C003,Charitable giving structure,3 years,$500K,Medium,Not started
+C003,Principal growth with downside control,Ongoing,N/A,High,On track

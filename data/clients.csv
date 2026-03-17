@@ -1,0 +1,4 @@
+client_id,client_name,risk_tolerance,account_type,relationship_start,aum_band,primary_advisor_notes
+C001,Jennifer Martinez,Moderate,Individual,2020-03-15,$2M-$5M,Interested in tax-efficient growth; has asked about ESG options
+C002,Robert Chen,Conservative,Joint,2018-07-22,$1M-$2M,Retirement-focused; spouse involved in major decisions
+C003,Sarah Williams,Aggressive,Trust,2021-11-08,$5M+,Estate planning and generational wealth transfer priorities

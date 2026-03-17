@@ -1,0 +1,7 @@
+client_id,consideration_type,description,action_required,deadline
+C001,Suitability,Client risk tolerance Moderate; ensure recommendations align with profile.,Review before any new product recommendation,Ongoing
+C001,Disclosure,ESG preferences documented; provide ESG disclosure when discussing ESG products.,Include in next ESG discussion,Next meeting
+C002,Concentration,Concentrated position in former employer stock (legacy); document any retention rationale.,Document in file if no change,2025-06-30
+C002,Withdrawal,Systematic withdrawal plan in place; confirm no overspend vs plan.,Confirm at next review,Next meeting
+C003,Fiduciary,Trust account; ensure all advice in best interest of beneficiaries.,Standard fiduciary process,Ongoing
+C003,Documentation,Estate/ILIT recommendations must be documented with client acknowledgment.,Obtain signed acknowledgment for ILIT draft,Q2 2025

@@ -1,0 +1,7 @@
+note_id,client_id,note_date,note_type,summary,details
+N001,C001,2025-03-10,Meeting,Quarterly review completed,Discussed rebalancing; client asked about international exposure. Follow-up: send ESG fund comparison by 3/20.
+N002,C001,2025-02-28,Call,Tax-loss harvesting inquiry,Client inquired about harvesting losses in tech positions. Provided overview; agreed to revisit in Q2.
+N003,C002,2025-03-08,Meeting,Retirement income planning,Reviewed withdrawal strategy; client concerned about sequence-of-returns risk. Suggested bond ladder discussion next meeting.
+N004,C002,2025-01-15,Email,Beneficiary update,Spouse requested beneficiary form update for 401(k) rollover account. Completed.
+N005,C003,2025-03-12,Meeting,Estate and trust review,Discussed ILIT funding and trustee succession. Client wants draft by Q2.
+N006,C003,2025-02-20,Call,Market volatility check-in,Client called during drawdown; reassured on long-term plan. No changes requested.
