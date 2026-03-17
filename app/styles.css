@@ -1,0 +1,136 @@
+/* Advisor Meeting Prep Copilot - production styles */
+
+/* Main content max-width for readability */
+.main .block-container {
+    max-width: 1100px;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
+
+/* Header area */
+.app-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color, rgba(49, 51, 63, 0.2));
+}
+.app-header h1 {
+    font-size: 1.85rem !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.35rem !important;
+}
+.app-tagline {
+    color: var(--text-muted, #73808c);
+    font-size: 0.95rem;
+    line-height: 1.45;
+}
+
+/* Sidebar grouping */
+[data-testid="stSidebar"] .stMarkdown h2 {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted, #73808c);
+    margin-bottom: 0.5rem !important;
+}
+[data-testid="stSidebar"] section:first-of-type {
+    padding-top: 0.5rem;
+}
+
+/* Cards for result sections */
+.result-card {
+    background: var(--background-secondary, rgba(49, 51, 63, 0.08));
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color, rgba(49, 51, 63, 0.12));
+}
+.result-card h3 {
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.6rem !important;
+    color: var(--text-muted, #73808c);
+}
+.result-card ul {
+    margin: 0;
+    padding-left: 1.2rem;
+    line-height: 1.55;
+}
+
+/* Success banner */
+.success-banner {
+    background: linear-gradient(135deg, rgba(38, 166, 154, 0.12) 0%, rgba(38, 166, 154, 0.06) 100%);
+    border: 1px solid rgba(38, 166, 154, 0.35);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-muted, #73808c);
+}
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+.empty-state-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color, inherit);
+    margin-bottom: 0.5rem;
+}
+.empty-state-desc {
+    font-size: 0.9rem;
+    max-width: 420px;
+    margin: 0 auto 1.5rem;
+    line-height: 1.5;
+}
+
+/* List empty state */
+.list-empty {
+    color: var(--text-muted, #73808c);
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* Tabs - tighter */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+.stTabs [data-baseweb="tab"] {
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+}
+
+/* Footer */
+.app-footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color, rgba(49, 51, 63, 0.2));
+    font-size: 0.75rem;
+    color: var(--text-muted, #73808c);
+}
+
+/* Dividers between sections */
+.section-divider {
+    height: 1px;
+    background: var(--border-color, rgba(49, 51, 63, 0.15));
+    margin: 1.25rem 0;
+}
+
+/* Confidence/review block */
+.confidence-block {
+    background: rgba(255, 193, 7, 0.08);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-top: 1rem;
+}

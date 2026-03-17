@@ -1,21 +1,30 @@
-# Advisor Meeting Prep Copilot - production image
+# Stage 1: build frontend (React + TypeScript + Vite)
+FROM node:20-alpine AS frontend
+WORKDIR /build
+COPY frontend/ ./
+RUN npm install && npm run build
+
+# Stage 2: Python API + static frontend
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install dependencies
+# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application and data
+# Copy backend and data
+COPY api/ ./api/
 COPY app/ ./app/
 COPY agents/ ./agents/
 COPY data/ ./data/
 
-# Railway sets PORT; default 8501 for local Docker
+# Copy built frontend from stage 1
+COPY --from=frontend /build/dist ./frontend/dist
+
+# Railway sets PORT
 EXPOSE 8501
-ENV STREAMLIT_SERVER_HEADLESS=true
 ENV PORT=8501
 
-# Run from project root; use PORT so Railway can inject it
-CMD ["sh", "-c", "streamlit run app/streamlit_app.py --server.port=${PORT:-8501} --server.address=0.0.0.0"]
+# Run FastAPI (serves API + static frontend)
+CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8501}"]

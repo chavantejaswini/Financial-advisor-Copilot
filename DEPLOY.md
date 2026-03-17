@@ -40,12 +40,17 @@ The repo includes a **Dockerfile**. Use it on any platform that builds and runs 
 
 ### Build and run locally
 
+The Docker image builds the **React + TypeScript frontend** and runs the **FastAPI** server (API + static UI).
+
 ```bash
 docker build -t advisor-copilot .
 docker run -p 8501:8501 -e OPENAI_API_KEY=sk-your-key advisor-copilot
 ```
 
-Open http://localhost:8501
+Open http://localhost:8501 (modern JS/TS UI). For **local development** without Docker:
+
+- **Terminal 1 – API:** `uvicorn api.main:app --reload --port 8000`
+- **Terminal 2 – Frontend:** `cd frontend && npm install && npm run dev` → http://localhost:5173 (proxies /api to 8000)
 
 ### Railway (Docker)
 
