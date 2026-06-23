@@ -1,3 +1,14 @@
+---
+title: Advisor Meeting Prep Copilot
+emoji: 📋
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+---
+
 # Advisor Meeting Prep Copilot
 
 A financial-advisor copilot that prepares for client meetings AND executes CRM actions on natural-language commands. Built as a **3-agent LangChain pipeline with live Salesforce CRM + SOQL integration**, with an optional **Agentforce API** bridge that invokes a custom SF-native Agent in parallel.
