@@ -1,65 +1,78 @@
 """
-Connection Agent: Responsible for creating relationships between contexts.
-Takes Access Agent output and identifies how client profile, portfolio, goals, market, and compliance connect.
+Connection Agent: identifies cross-cutting relationships in the client context.
+
+Implemented as a LangChain LCEL chain (prompt | llm | JsonOutputParser) so the wiring
+matches the rest of the pipeline. Output shape is unchanged from the original CSV
+implementation — the downstream Summary Agent doesn't need to care.
 """
 
+from __future__ import annotations
+
 import json
-from .llm_client import chat_completion
+import logging
+import os
+from typing import Optional
+
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+
+logger = logging.getLogger(__name__)
 
 
+# Kept as a module-level helper because the Summary Agent reuses it to flatten context
+# into the prompt body without re-importing pandas.
 def _context_to_text(ctx: dict) -> str:
-    """Serialize client context into a readable text block for the LLM."""
     parts = []
     if ctx.get("client_profile"):
-        parts.append("CLIENT PROFILE:\n" + json.dumps(ctx["client_profile"], indent=2))
+        parts.append("CLIENT PROFILE:\n" + json.dumps(ctx["client_profile"], indent=2, default=str))
     if ctx.get("crm_notes"):
-        parts.append("CRM NOTES:\n" + json.dumps(ctx["crm_notes"], indent=2))
+        parts.append("CRM NOTES:\n" + json.dumps(ctx["crm_notes"], indent=2, default=str))
+    if ctx.get("open_tasks"):
+        parts.append("OPEN TASKS:\n" + json.dumps(ctx["open_tasks"], indent=2, default=str))
     if ctx.get("portfolio_activity"):
-        parts.append("PORTFOLIO ACTIVITY:\n" + json.dumps(ctx["portfolio_activity"], indent=2))
+        parts.append("PORTFOLIO ACTIVITY:\n" + json.dumps(ctx["portfolio_activity"], indent=2, default=str))
     if ctx.get("client_goals"):
-        parts.append("CLIENT GOALS:\n" + json.dumps(ctx["client_goals"], indent=2))
+        parts.append("CLIENT GOALS:\n" + json.dumps(ctx["client_goals"], indent=2, default=str))
     if ctx.get("compliance_considerations"):
-        parts.append("COMPLIANCE:\n" + json.dumps(ctx["compliance_considerations"], indent=2))
+        parts.append("COMPLIANCE:\n" + json.dumps(ctx["compliance_considerations"], indent=2, default=str))
     if ctx.get("market_updates"):
-        parts.append("MARKET UPDATES:\n" + json.dumps(ctx["market_updates"], indent=2))
+        parts.append("MARKET UPDATES:\n" + json.dumps(ctx["market_updates"], indent=2, default=str))
     return "\n\n".join(parts) if parts else "No context available."
 
 
+_SYSTEM = (
+    "You are a financial advisory assistant. You output valid JSON only — no markdown, "
+    "no code fences. You return an object with a single key 'relationships' which is a "
+    "list of plain-language strings (2-3 sentences each) connecting goals to portfolio/market, "
+    "market to holdings, compliance to topics, and cross-cutting themes."
+)
+
+_USER = (
+    "Given the following client context, identify clear RELATIONSHIPS between different "
+    "pieces of information. Be concise and actionable.\n\n---\n{context}"
+)
+
+
+def _llm(model: str) -> ChatOpenAI:
+    return ChatOpenAI(
+        model=model,
+        temperature=0.3,
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("OPENAI_BASE_URL") or None,
+    )
+
+
 def run_connection_agent(client_context: dict, model: str = "gpt-4o-mini") -> dict:
-    """
-    Analyze client context and produce structured relationships:
-    - links between goals and portfolio/actions
-    - links between market updates and client holdings
-    - links between compliance items and recommended topics
-    - any cross-cutting themes (e.g. retirement + sequence risk + fixed income)
-    """
     if client_context.get("error"):
         return {"error": client_context["error"], "relationships": []}
 
-    text = _context_to_text(client_context)
-    prompt = """You are a financial advisory assistant. Given the following client context (profile, CRM notes, portfolio, goals, compliance, market updates), identify and list clear RELATIONSHIPS between different pieces of information. For example:
-- Which goals are supported or at risk by current portfolio or market conditions?
-- Which market updates are most relevant to this client's holdings or goals?
-- Which compliance items should influence what we discuss or recommend?
-- Any recurring themes (e.g. retirement income, tax, ESG) that tie multiple data points together.
+    prompt = ChatPromptTemplate.from_messages([("system", _SYSTEM), ("user", _USER)])
+    chain = prompt | _llm(model) | JsonOutputParser()
 
-Respond with a JSON object containing a single key "relationships" which is a list of strings. Each string is one relationship in plain language (2-3 sentences), suitable for an advisor to use when preparing for a client meeting. Be concise and actionable."""
-
-    messages = [
-        {"role": "system", "content": "You output valid JSON only. No markdown code fences."},
-        {"role": "user", "content": f"{prompt}\n\n---\n{text}"},
-    ]
-
-    raw_response = ""
     try:
-        out = chat_completion(messages, model=model)
-        raw_response = out
-        out_clean = out.strip()
-        if out_clean.startswith("```"):
-            out_clean = out_clean.split("```")[1]
-            if out_clean.startswith("json"):
-                out_clean = out_clean[4:]
-        data = json.loads(out_clean)
-        return {"relationships": data.get("relationships", []), "raw_context_used": True}
+        data = chain.invoke({"context": _context_to_text(client_context)})
+        return {"relationships": data.get("relationships", []), "source": client_context.get("source")}
     except Exception as e:
-        return {"error": str(e), "relationships": [], "raw_response": raw_response}
+        logger.exception("Connection agent failed")
+        return {"error": str(e), "relationships": []}
