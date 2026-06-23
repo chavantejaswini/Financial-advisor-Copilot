@@ -6,3 +6,12 @@ __pycache__/
 .venv/
 frontend/node_modules/
 frontend/dist/
+
+# Salesforce CLI local cache / auth state — never commit
+.sfdx/
+
+# Local editor / agent tooling config
+.claude/
+
+# TypeScript incremental build cache
+*.tsbuildinfo

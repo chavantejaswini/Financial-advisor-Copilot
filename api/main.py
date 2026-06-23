@@ -1,12 +1,20 @@
 """
 FastAPI backend for Advisor Meeting Prep Copilot.
-Serves /api/clients, /api/prep and (in production) static frontend.
+
+Endpoints:
+  GET  /api/health    Connectivity status for OpenAI / Salesforce / Agentforce.
+  GET  /api/clients   Client dropdown (Salesforce Accounts when configured, else CSV).
+  POST /api/prep      Run the 3-agent pipeline; returns prep + CRM actions taken
+                      + (when configured) the parallel Agentforce response.
 """
+
+from __future__ import annotations
 
 import logging
 import math
 import sys
 from pathlib import Path
+from typing import Optional
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -14,7 +22,6 @@ logger = logging.getLogger(__name__)
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-# Load .env so OPENAI_API_KEY is available when running locally
 from dotenv import load_dotenv
 load_dotenv(ROOT / ".env")
 
@@ -23,8 +30,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-# Import after path is set
-from agents.access_agent import load_all_data
+from agents.access_agent import list_clients_sf, load_all_data
+from agents.agentforce_client import is_configured as agentforce_configured
+from agents.salesforce_client import is_configured as sf_configured
+from agents.salesforce_client import probe as sf_probe
 from app.pipeline import run_copilot
 
 
@@ -40,7 +49,6 @@ app.add_middleware(
 
 @app.exception_handler(Exception)
 def catch_all(_request, exc: Exception):
-    """Ensure every unhandled error returns JSON (not HTML)."""
     from fastapi.responses import JSONResponse
     if isinstance(exc, HTTPException):
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
@@ -50,12 +58,37 @@ def catch_all(_request, exc: Exception):
 class PrepRequest(BaseModel):
     client_id: str
     model: str = "gpt-4o-mini"
-    notes: str | None = None
+    notes: Optional[str] = None
+
+
+@app.get("/api/health")
+def health():
+    """Surface which CRM backend is live so the UI can render an honest status badge."""
+    return {
+        "openai_configured": _openai_ok(),
+        "salesforce_configured": sf_configured(),
+        "salesforce_instance": sf_probe() if sf_configured() else None,
+        "agentforce_configured": agentforce_configured(),
+    }
+
+
+def _openai_ok() -> bool:
+    from agents.llm_client import get_client
+    try:
+        get_client()
+        return True
+    except Exception:
+        return False
 
 
 @app.get("/api/clients")
 def list_clients():
-    """Return list of clients for the dropdown."""
+    """Salesforce-backed when configured; CSV fallback otherwise."""
+    if sf_configured():
+        try:
+            return list_clients_sf()
+        except Exception as e:
+            logger.warning("Salesforce client list failed, falling back to CSV: %s", e)
     data_dir = ROOT / "data"
     all_data = load_all_data(data_dir)
     clients_df = all_data.get("clients")
@@ -68,7 +101,7 @@ def list_clients():
 
 
 def _sanitize_for_json(obj):
-    """Replace NaN/inf with None so the response is JSON-serializable (pandas can produce NaN)."""
+    """Replace NaN/inf with None so pandas-sourced floats don't break JSON encoding."""
     if isinstance(obj, dict):
         return {k: _sanitize_for_json(v) for k, v in obj.items()}
     if isinstance(obj, list):
@@ -79,7 +112,6 @@ def _sanitize_for_json(obj):
 
 
 def _check_api_key():
-    """Validate OpenAI API key before running the pipeline; raise HTTPException if missing."""
     from agents.llm_client import get_client
     try:
         get_client()
@@ -89,11 +121,10 @@ def _check_api_key():
 
 @app.post("/api/prep")
 def generate_prep(req: PrepRequest):
-    """Run the copilot pipeline and return meeting prep + relationships + raw context."""
     _check_api_key()
     data_dir = ROOT / "data"
     try:
-        result = run_copilot(req.client_id, data_dir=data_dir, model=req.model)
+        result = run_copilot(req.client_id, data_dir=data_dir, model=req.model, advisor_note=req.notes)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -102,11 +133,16 @@ def generate_prep(req: PrepRequest):
     return _sanitize_for_json(result)
 
 
-# Mount static frontend last so /api routes take precedence (built files in frontend/dist)
 static_dir = ROOT / "frontend" / "dist"
 if static_dir.exists():
     app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")
 else:
     @app.get("/")
     def root():
-        return {"message": "Advisor Meeting Prep Copilot API", "docs": "/docs", "clients": "/api/clients", "prep": "POST /api/prep"}
+        return {
+            "message": "Advisor Meeting Prep Copilot API",
+            "docs": "/docs",
+            "health": "/api/health",
+            "clients": "/api/clients",
+            "prep": "POST /api/prep",
+        }

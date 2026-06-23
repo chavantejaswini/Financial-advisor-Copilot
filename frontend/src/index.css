@@ -2,10 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: light;
+}
+
+html,
 body {
-  @apply bg-slate-950 text-slate-100 antialiased font-sans;
+  height: 100%;
+}
+
+body {
+  @apply bg-surface-base text-ink-900 antialiased font-sans;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
   min-height: 100vh;
+}
+
+/* Tabular numerals for any financial figures */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Visible, consistent focus ring (WCAG AA) */
+*:focus-visible {
+  outline: 2px solid theme('colors.accent.500');
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Custom scrollbars — subtle, enterprise */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.surface.border-strong') transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: theme('colors.surface.border-strong');
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.ink.400');
+  background-clip: padding-box;
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    theme('colors.surface.sunken') 25%,
+    theme('colors.surface.border') 37%,
+    theme('colors.surface.sunken') 63%
+  );
+  background-size: 200% 100%;
+  @apply animate-shimmer rounded-md;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
