@@ -31,7 +31,7 @@ from typing import Optional
 
 import pandas as pd
 
-from .salesforce_client import get_sf, is_configured as sf_is_configured
+from .salesforce_client import call as sf_call, get_sf, is_configured as sf_is_configured
 
 logger = logging.getLogger(__name__)
 
@@ -86,11 +86,10 @@ def list_clients_sf() -> list[dict]:
 
     `client_id` is the Account Id (or External_Id__c if seeded with one).
     """
-    sf = get_sf()
-    res = sf.query(
+    res = sf_call(lambda sf: sf.query(
         "SELECT Id, Name, Type, Industry, Description "
         "FROM Account WHERE Name != null ORDER BY Name LIMIT 200"
-    )
+    ))
     return [
         {"client_id": r["Id"], "client_name": r["Name"]}
         for r in res.get("records", [])
@@ -128,19 +127,18 @@ def _profile_from_account(acc: dict) -> dict:
 
 def _sf_client_context(client_id: str) -> dict:
     """SOQL-driven version of get_client_context. client_id is the Account Id."""
-    sf = get_sf()
     try:
-        acc = sf.Account.get(client_id)
+        acc = sf_call(lambda sf: sf.Account.get(client_id))
     except Exception as e:
         return {"error": f"Account {client_id} not found in Salesforce: {e}"}
 
     aid = acc["Id"]
 
-    crm_notes_q = sf.query(
+    crm_notes_q = sf_call(lambda sf: sf.query(
         "SELECT Id, Subject, Description, ActivityDate, Status, TaskSubtype "
         f"FROM Task WHERE WhatId = '{aid}' AND Status = 'Completed' "
         "ORDER BY ActivityDate DESC NULLS LAST LIMIT 25"
-    )
+    ))
     crm_notes = [
         {
             "note_id": r["Id"],
@@ -153,11 +151,11 @@ def _sf_client_context(client_id: str) -> dict:
         for r in crm_notes_q.get("records", [])
     ]
 
-    open_tasks_q = sf.query(
+    open_tasks_q = sf_call(lambda sf: sf.query(
         "SELECT Id, Subject, Description, ActivityDate, Status, Priority "
         f"FROM Task WHERE WhatId = '{aid}' AND Status != 'Completed' "
         "ORDER BY ActivityDate ASC NULLS LAST LIMIT 25"
-    )
+    ))
     open_tasks = [
         {
             "task_id": r["Id"],
@@ -170,10 +168,10 @@ def _sf_client_context(client_id: str) -> dict:
         for r in open_tasks_q.get("records", [])
     ]
 
-    opps_q = sf.query(
+    opps_q = sf_call(lambda sf: sf.query(
         "SELECT Id, Name, StageName, Amount, CloseDate, Description "
         f"FROM Opportunity WHERE AccountId = '{aid}' ORDER BY CloseDate DESC LIMIT 25"
-    )
+    ))
     client_goals = [
         {
             "goal_id": r["Id"],
