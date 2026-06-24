@@ -105,6 +105,36 @@ def get_sf():
     return _sf
 
 
+def reset() -> None:
+    """Drop the cached client so the next get_sf() re-authenticates."""
+    global _sf
+    _sf = None
+
+
+def _is_expired_session(err: Exception) -> bool:
+    s = str(err)
+    return "INVALID_SESSION_ID" in s or "Session expired or invalid" in s
+
+
+def call(fn):
+    """Run fn(sf_client), transparently re-authenticating ONCE if the cached
+    Salesforce session has expired.
+
+    Salesforce access tokens expire after the org's session timeout. We cache the
+    client for performance, so a long-running process will eventually hold a dead
+    token. This wrapper catches INVALID_SESSION_ID, drops the cache, logs in again,
+    and retries — so callers never see a transient expiry.
+    """
+    try:
+        return fn(get_sf())
+    except Exception as e:
+        if _is_expired_session(e):
+            logger.info("Salesforce session expired — re-authenticating and retrying once")
+            reset()
+            return fn(get_sf())
+        raise
+
+
 def probe() -> Optional[str]:
     """Lightweight connectivity check used by /api/health. Returns instance URL or None."""
     try:
